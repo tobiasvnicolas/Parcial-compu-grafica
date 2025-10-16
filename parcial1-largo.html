@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preguntados - Parcial de Organización</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --correct-color: #2ecc71;
+            --incorrect-color: #e74c3c;
+            --neutral-bg: #ecf0f1;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--secondary-color);
+            color: var(--secondary-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .quiz-container {
+            background: var(--white);
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 600px;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        .header {
+            background-color: var(--primary-color);
+            color: var(--white);
+            padding: 20px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.5em;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        #question-text {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 25px;
+            min-height: 50px;
+        }
+
+        .answer-options {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .btn {
+            background-color: var(--neutral-bg);
+            border: 2px solid transparent;
+            border-radius: 10px;
+            padding: 15px;
+            font-size: 1em;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover:not([disabled]) {
+            background-color: #dbe4e8;
+            border-color: var(--primary-color);
+        }
+        
+        .btn:disabled {
+            cursor: not-allowed;
+        }
+
+        .btn.correct {
+            background-color: var(--correct-color);
+            color: var(--white);
+            font-weight: bold;
+        }
+
+        .btn.incorrect {
+            background-color: var(--incorrect-color);
+            color: var(--white);
+            font-weight: bold;
+        }
+
+        #next-btn {
+            display: none; /* Oculto por defecto */
+            width: 50%;
+            margin: 30px auto 0;
+            padding: 15px;
+            background-color: var(--primary-color);
+            color: var(--white);
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #next-btn:hover {
+            background-color: #2980b9;
+        }
+        
+        #results-container {
+            padding: 40px;
+        }
+        
+        #results-container h2 {
+            margin-top: 0;
+        }
+
+        #play-again-btn {
+             width: 50%;
+            margin: 30px auto 0;
+            padding: 15px;
+            background-color: var(--correct-color);
+            color: var(--white);
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+
+    </style>
+</head>
+<body>
+
+    <div class="quiz-container">
+        <div class="header">
+            <h1>Desafío de Computación Gráfica 🏆</h1>
+            <div class="stats">
+                <span id="question-counter"></span>
+                <span id="score">Puntaje: 0</span>
+            </div>
+        </div>
+        
+        <div class="main-content" id="quiz-area">
+            <p id="question-text">Aquí va la pregunta...</p>
+            <div class="answer-options" id="answer-buttons">
+                </div>
+            <button id="next-btn">Siguiente Pregunta →</button>
+        </div>
+
+        <div class="main-content" id="results-container" style="display: none;">
+            <h2>¡Juego Terminado!</h2>
+            <p id="results-text">Obtuviste X de Y respuestas correctas.</p>
+            <button id="play-again-btn">Volver a Jugar</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            // Bloque 1: General de Computación Gráfica:
+            {
+              question: '¿Qué modelo de color utilizamos en nuestro proyecto? ¿Por qué?',
+              answers: [
+                { text: 'Utilizamos el modelo CMYK porque es el estándar de impresión y reproduce mejor los colores metálicos.', correct: false },
+                { text: 'Utilizamos el modelo HSV porque facilita la selección de tonos y saturación en interfaces gráficas.', correct: false },
+                { text: 'Utilizamos el modelo RGB (Red, Green, Blue) con canal alfa (RGBA), porque las pantallas emiten luz mediante píxeles que mezclan estos tres colores primarios aditivos.', correct: true },
+                { text: 'Utilizamos el modelo YCbCr porque permite mayor compresión en los gráficos digitales.', correct: false }
+              ]
+            },
+            {
+              question: '¿Qué primitivas gráficas utilizamos en nuestro proyecto?',
+              answers: [
+                { text: 'Utilizamos cuadrados y rectángulos para simplificar la representación de polígonos.', correct: false },
+                { text: 'Utilizamos triángulos. Con ellos construimos figuras más complejas como el Quad y el Cube.', correct: true },
+                { text: 'Utilizamos líneas y puntos, ya que son las primitivas más simples en OpenGL.', correct: false },
+                { text: 'Utilizamos polígonos de 5 lados para obtener mejor suavizado en los bordes.', correct: false }
+              ]
+            },
+            {
+              question: '¿Para qué se suele utilizar la operación entre vectores: Producto Escalar? ¿Qué tipo de dato devuelve?',
+              answers: [
+                { text: 'Se utiliza para obtener un vector perpendicular a los dos vectores dados. Devuelve un vector 3D (vec3).', correct: false },
+                { text: 'Se utiliza para calcular el ángulo entre dos vectores o la proyección de un vector sobre otro. Devuelve un valor escalar (float).', correct: true },
+                { text: 'Se utiliza para calcular el módulo de un vector a partir de su dirección. Devuelve un número entero (int).', correct: false },
+                { text: 'Se utiliza para combinar dos vectores en uno de mayor dimensión. Devuelve un vector 4D (vec4).', correct: false }
+              ]
+            },
+            {
+              question: '¿Para qué se suele utilizar la operación entre vectores: Producto Vectorial? ¿Qué tipo de dato devuelve?',
+              answers: [
+                { text: 'Se utiliza para calcular el ángulo entre dos vectores. Devuelve un escalar (float).', correct: false },
+                { text: 'Se utiliza para crear un vector perpendicular a los dos vectores dados. Devuelve un vector con las mismas dimensiones que los originales.', correct: true },
+                { text: 'Se utiliza para obtener la magnitud combinada de dos vectores. Devuelve un número entero (int).', correct: false },
+                { text: 'Se utiliza para normalizar un vector perpendicular a los dos vectores dados. Devuelve un vector unitario que fue normalizado mediante la librería gml.', correct: false }
+              ]
+            },
+            {
+              question: '¿Cuál es la coordenada homogénea w para un punto? ¿Por qué?',
+              answers: [
+                { text: 'La coordenada w es 0 porque los puntos no deben verse afectados por traslaciones.', correct: false },
+                { text: 'La coordenada w es 1 porque los puntos deben verse afectados por las traslaciones.', correct: true },
+                { text: 'La coordenada w es 2 porque representa la magnitud del punto en el espacio.', correct: false },
+                { text: 'La coordenada w es -1 porque las traslaciones invierten su dirección.', correct: false }
+              ]
+            },
+            {
+              question: '¿Cuál es la coordenada homogénea w para una dirección? ¿Por qué?',
+              answers: [
+                { text: 'La coordenada w es 1 porque las direcciones deben desplazarse junto con los puntos.', correct: false },
+                { text: 'La coordenada w es 0 porque las direcciones no deben verse afectadas por traslaciones.', correct: true },
+                { text: 'La coordenada w es -1 porque representan una inversión del eje.', correct: false },
+                { text: 'La coordenada w es 2 porque define la longitud de la dirección.', correct: false }
+              ]
+            },
+            {
+              question: '¿Qué estructura matemática me permite pasar un vector de un espacio vectorial a otro?',
+              answers: [
+                { text: 'Un escalar que amplifica o reduce las componentes del vector, generalmente ayuda a cambiar el vector de un tamaño del plano a otro.', correct: false },
+                { text: 'Una matriz de transformación, generalmente de 4x4 en 3D, para cambiar de un sistema de coordenadas a otro.', correct: true },
+                { text: 'Un tensor que aplica una rotación no lineal sobre el vector.', correct: false },
+                { text: 'Una función trigonométrica que define el ángulo del nuevo espacio.', correct: false }
+              ]
+            },
+            {
+              question: '¿Qué dimensiones debe tener una matriz para aplicar transformaciones lineales en 3D?',
+              answers: [
+                { text: 'Debe ser una matriz de 3x3, porque el espacio tiene tres ejes.', correct: false },
+                { text: 'Debe ser una matriz de 4x4 para trabajar con coordenadas homogéneas en 3D.', correct: true },
+                { text: 'Debe ser una matriz de 2x2 para mantener la eficiencia computacional.', correct: false },
+                { text: 'Debe ser una matriz de 5x5 para incluir la componente temporal.', correct: false }
+              ]
+            },
+            {
+              question: '¿Qué función cumple, en Computación Gráfica, la inversa de una matriz? Dame un ejemplo.',
+              answers: [
+                { text: 'La inversa amplifica las transformaciones aplicadas a los objetos. Por ejemplo, duplicar la escala necesaria para poder llega a tener el tamaño de la ventana.', correct: false },
+                { text: 'La inversa de una matriz deshace o invierte las transformaciones aplicadas. Por ejemplo, transformar un rayo del espacio de la cámara al del mundo.', correct: true },
+                { text: 'La inversa sirve para interpolar entre dos transformaciones. Por ejemplo, calcular un promedio necesario para calcular el Raycasting.', correct: false },
+                { text: 'La inversa elimina las rotaciones pero conserva las escalas.', correct: false }
+              ]
+            },
+            {
+              question: '¿A qué hace referencia el "Espacio del Objeto"?',
+              answers: [
+                { text: 'Al sistema de coordenadas global del mundo 3D, después de aplicarle transformaciones.', correct: false },
+                { text: 'Al sistema de coordenadas local del objeto, antes de aplicarle transformaciones.', correct: true },
+                { text: 'Al espacio donde se proyectan los píxeles en pantalla.', correct: false },
+                { text: 'Al conjunto de vértices normalizados después del pipeline gráfico.', correct: false }
+              ]
+            },
+            {
+              question: '¿A qué hace referencia el "Espacio del Mundo"?',
+              answers: [
+                { text: 'Es el sistema de coordenadas local del objeto, antes de aplicar transformaciones.', correct: false },
+                { text: 'Es el sistema de coordenadas global de la escena, donde todos los objetos se posicionan y el origen (0,0,0) sirve como referencia común.', correct: true },
+                { text: 'Es el espacio 2D en el que se renderiza la escena en pantalla.', correct: false },
+                { text: 'Es el sistema de coordenadas relativo a la cámara.', correct: false }
+              ]
+            },
+            {
+              question: '¿A qué hace referencia el "Espacio de Vista"?',
+              answers: [
+                { text: 'Es el sistema de coordenadas global donde todos los objetos comparten el mismo origen.', correct: false },
+                { text: 'Es el sistema de coordenadas relativo a la cámara, donde el origen está en la posición de la cámara y los ejes se orientan según hacia dónde mira.', correct: true },
+                { text: 'Es el sistema utilizado por la GPU para proyectar los píxeles en pantalla.', correct: false },
+                { text: 'Es el espacio donde se aplican las transformaciones de textura (UV).', correct: false }
+              ]
+            },
+            {
+              question: '¿Dónde está el punto de origen, normalmente, en una pantalla?',
+              answers: [
+                { text: 'Siempre está en el centro de la pantalla, independientemente del sistema.', correct: false },
+                { text: 'Depende del sistema: en algunos está en la esquina superior izquierda (interfaces gráficas) y en otros en la inferior izquierda (OpenGL).', correct: true },
+                { text: 'Siempre está en la esquina inferior derecha, porque es el punto con coordenadas máximas. Además existe una convención internacional, que facilita el desarrollo de la computación gráfica mundial', correct: false },
+                { text: 'Se define en función de la posición de la cámara en la escena. Cómo esta puede variar entonces es relativo y depende de la cámara', correct: false }
+              ]
+            },
+            {
+              question: '¿Dónde está el punto de origen, normalmente, en un objeto de la escena?',
+              answers: [
+                { text: 'En la esquina inferior del objeto, donde comienza la malla 3D.', correct: false },
+                { text: 'En el centro geométrico del objeto, también llamado pivot point.', correct: true },
+                { text: 'En la posición global (0,0,0) de la escena.', correct: false },
+                { text: 'En el vértice con coordenadas más bajas (mínimos valores x, y, z).', correct: false }
+              ]
+            },
+            {
+              question: '¿Qué son coordenadas normalizadas NDC?',
+              answers: [
+                { text: 'Son coordenadas que van de 0 a 1 en todos los ejes (x, y, z) y se usan para mapear texturas en los objetos.', correct: false },
+                { text: 'Son coordenadas que van de -1 a 1 en todos los ejes (x, y, z) y se usan tras la proyección para estandarizar la escena.', correct: true },
+                { text: 'Son coordenadas de píxeles en todos los ejes (x, y, z), que se calculan después del rasterizado.', correct: false },
+                { text: 'Son coordenadas locales del modelo en todos los ejes (x, y, z), que aún no fueron transformadas.', correct: false }
+              ]
+            },
+            {
+              question: '¿Cuál es la principal diferencia entre la proyección en perspectiva y la ortográfica?',
+              answers: [
+                { text: 'La proyección perspectiva mantiene el tamaño constante y la ortográfica reduce los objetos lejanos.', correct: false },
+                { text: 'La proyección perspectiva simula la visión real (objetos lejanos se ven más pequeños) y la ortográfica mantiene el tamaño sin importar la distancia.', correct: true },
+                { text: 'La proyección ortográfica aplica efectos de desenfoque según la distancia.', correct: false },
+                { text: 'La proyección perspectiva utiliza coordenadas normalizadas, mientras que la ortográfica no.', correct: false }
+              ]
+            },
+            {
+              question: '¿Qué son el VBO, IBO y VAO? Describe brevemente la función de cada uno.',
+              answers: [
+                { text: 'Son estructuras que conectan los datos del modelo con el shader: VBO almacena vértices, IBO índices, y VAO describe cómo se vinculan.', correct: true },
+                { text: 'Son librerías de OpenGL que permiten importar modelos 3D externos al motor.', correct: false },
+                { text: 'Son funciones matemáticas que definen la orientación del modelo en el espacio.', correct: false },
+                { text: 'Son shaders específicos para controlar vértices, iluminación y texturas.', correct: false }
+              ]
+            },
+            {
+              question: '¿Qué indica la normal de un vértice?',
+              answers: [
+                { text: 'Indica la posición global del vértice dentro del modelo.', correct: false },
+                { text: 'Indica la dirección perpendicular a la superficie en ese vértice, es decir, hacia dónde mira.', correct: true },
+                { text: 'Indica la cantidad de luz que incide en el vértice, es decir, la intensidad lumínica.', correct: false },
+                { text: 'Indica la magnitud de la velocidad de animación del vértice.', correct: false }
+              ]
+            },
+            {
+              question: '¿En qué lenguaje programamos para hacer un shader con OpenGL?',
+              answers: [
+                { text: 'En C++.', correct: false },
+                { text: 'En GLSL.', correct: true },
+                { text: 'En Python.', correct: false },
+                { text: 'En Vertex.', correct: false }
+              ]
+            },
+            {
+              question: '¿Qué tipo de unidades recorre el Vertex Shader?',
+              answers: [
+                { text: 'El Vertex Shader recorre figuras geométricas. Por ejemplo: polígonos completos.', correct: false },
+                { text: 'El Vertex Shader recorre píxeles, ejecutándose una vez por cada fragmento.', correct: false },
+                { text: 'El Vertex Shader recorre vértices, ejecutándose una vez por cada vértice del modelo.', correct: true },
+                { text: 'El Vertex Shader recorre triángulos, ejecutándose una vez por cada primitiva (y esto lo hace más eficiente).', correct: false }
+              ]
+            },
+            {
+              question: '¿Qué tipo de unidades recorre el Fragment Shader?',
+              answers: [
+                { text: 'El Fragment Shader recorre triángulos (de esta forma puede construir cualquier figura) enteros de la geometría rasterizada, procesando cada vértice de forma individual.', correct: false },
+                { text: 'El Fragment Shader recorre fragmentos (píxeles del modelo rasterizado). Se ejecuta una vez por cada píxel que forma parte de la geometría rasterizada.', correct: true },
+                { text: 'El Fragment Shader recorre vértices transformados después del Vertex Shader, aplicando iluminación básica.', correct: false },
+                { text: 'El Fragment Shader recorre grupos de polígonos proyectados en pantalla, ejecutándose una vez por cada polígono.', correct: false }
+              ]
+            },
+            {
+              question: 'En el Render Pipeline de la GPU ¿Qué se ejecuta primero, el Vertex o el Fragment shader?',
+              answers: [
+                { text: 'Primero se ejecuta el Fragment Shader, luego el Vertex Shader y finalmente la rasterización de la escena completa.', correct: false },
+                { text: 'En el Render Pipeline primero se ejecuta el Vertex Shader (transforma cada vértice), luego ocurre la rasterización, y finalmente se ejecuta el Fragment Shader (calcula el color de cada píxel).', correct: true },
+                { text: 'El orden depende de la complejidad del modelo: en algunos casos el Fragment Shader puede ejecutarse antes para optimizar el proceso.', correct: false },
+                { text: 'Los dos shaders se ejecutan al mismo tiempo de forma paralela, sin un orden definido dentro del pipeline.', correct: false }
+              ]
+            },
+            {
+              question: '¿El Compute Shader recorre unidades?',
+              answers: [
+                { text: 'Sí, recorre vértices y píxeles igual que los demás shaders, pero lo hace con mayor velocidad de cálculo. Además de esto se ejectuta en grupos de trabajo (work groups) de forma paralela.', correct: false },
+                { text: 'El Compute Shader no recorre unidades de geometría como los otros shaders. Se ejecuta en grupos de trabajo (work groups) de forma paralela, procesando datos sin depender del Render Pipeline.', correct: true },
+                { text: 'Recorre polígonos y caras de los objetos tridimensionales, procesando sus normales en paralelo. Esto permite que el compute shader sólo trabaje en una sóla etapa del Render Pipeline.', correct: false },
+                { text: 'Solo recorre los fragmentos visibles en pantalla para acelerar el cálculo de iluminación.', correct: false }
+              ]
+            },
+            {
+              question: '¿El Compute Shader se ejecuta en GPU o en CPU?',
+              answers: [
+                { text: 'El Compute Shader se ejecuta en la CPU, ya que realiza tareas de control y no de renderizado.', correct: false },
+                { text: 'El Compute Shader se ejecuta en la GPU.', correct: true },
+                { text: 'El Compute Shader puede ejecutarse en cualquiera de las dos, dependiendo del tipo de compilación.', correct: false },
+                { text: 'El Compute Shader se ejecuta en un hilo separado del sistema operativo para controlar la memoria gráfica.', correct: false }
+              ]
+            },
+            {
+              question: '¿Cuál es la diferencia entre trabajar con Vertex y Fragment shader o hacerlo con Compute shader?',
+              answers: [
+                { text: 'El Vertex y Fragment shader se usan para procesar animaciones, mientras que el Compute shader se usa para controlar el movimiento de la cámara.', correct: false },
+                { text: 'El Vertex-Fragment shader está atado al Render Pipeline: el Vertex procesa vértices y el Fragment procesa píxeles rasterizados. El Compute Shader es de propósito general, independiente del pipeline y puede procesar toda la escena simultáneamente (ideal para raytracing).', correct: true },
+                { text: 'El Compute shader reemplaza completamente a los Vertex y Fragment shaders, ya que puede renderizar la geometría y aplicar colores directamente, independiente del pipeline. Sin embargo esto no garantiza que pueda procesar toda la escena simultáneamente', correct: false },
+                { text: 'El Vertex y Fragment shader trabajan en CPU y el Compute shader en GPU, lo que los hace incompatibles entre sí. Por estas razones el Raycasting se hace en CPU', correct: false }
+              ]
+            },
+            {
+              question: '¿Qué es un work group?',
+              answers: [
+                { text: 'Un work group es un conjunto de vértices agrupados en el Vertex Shader para optimizar la geometría de la escena. Permiten dividir el trabajo total en bloques que se procesan simultáneamente en la GPU.', correct: false },
+                { text: 'Work Group es un grupo de hilos de ejecución en un Compute Shader que trabajan en paralelo. Permiten dividir el trabajo total en bloques que se procesan simultáneamente en la GPU.', correct: true },
+                { text: 'Un work group es una colección de texturas aplicadas a un mismo objeto para mejorar la resolución visual. Permiten dividir el trabajo total en bloques que se procesan simultáneamente en la GPU.', correct: false },
+                { text: 'Un work group es una lista de shaders que se ejecutan en orden para procesar un modelo 3D. Permiten dividir el trabajo total en bloques que se procesan simultáneamente en la GPU.', correct: false }
+              ]
+            },
+            {
+              question: '¿Qué son los Uniforms? ¿En qué se diferencian con los atributos de un vértice?',
+              answers: [
+                { text: 'Los uniforms son variables que cambian por vértice, mientras que los atributos son constantes para todos los shaders.', correct: false },
+                { text: 'Los uniforms son variables globales enviadas desde la CPU con el mismo valor para todos los vértices y fragmentos, mientras que los atributos que varían entre vértices.', correct: true },
+                { text: 'Los uniforms se definen dentro del shader y se actualizan automáticamente en cada frame, sin intervención de la CPU. Sin embargo aunque no intervenga la CPU puede ser que si lo haga la GPU', correct: false },
+                { text: 'Los uniforms almacenan texturas 3D y los atributos contienen datos de color e iluminación.', correct: false }
+              ]
+            },
+            {
+              question: '¿Qué son los Sampler2D?',
+              answers: [
+                { text: 'Es una variable local que guarda un vector tridimensional usado para calcular sombras. Permite leer colores de una imagen cargada en la GPU usando coordenadas UV.', correct: false },
+                { text: 'Es un tipo de uniform especial que representa una textura 2D. Permite leer colores de una imagen cargada en la GPU usando coordenadas UV.', correct: true },
+                { text: 'Es una estructura que almacena los vértices de una textura y los interpola en tiempo real. Permite leer colores de una imagen cargada en la GPU usando coordenadas UV.', correct: false },
+                { text: 'Es un objeto de memoria que contiene las posiciones de los píxeles dentro de una textura. Permite leer colores de una imagen cargada en la GPU usando coordenadas UV.', correct: false }
+              ]
+            },
+            {
+              question: '¿Qué es un Ray (rayo) en Computación Gráfica?',
+              answers: [
+                { text: 'Es un vector cerrado que define una trayectoria finita usada para modelar curvas o trayectorias de movimiento. Principalmente cubos y planos', correct: false },
+                { text: 'El rayo en Computación Gráfica es una semirrecta definida por un punto de origen y una dirección. Se usa para simular trayectorias de luz o cálculos de colisiones.', correct: true },
+                { text: 'Es una línea infinita que conecta dos puntos del espacio tridimensional para definir superficies planas. Además es muy útil para definir posiciones de la cámara', correct: false },
+                { text: 'Es una estructura matemática usada para interpolar colores entre dos vértices de un triángulo.', correct: false }
+              ]
+            },
+
+            // Bloque 2: Proyecto:
+            {
+              question: "¿Dónde encontramos matrices de transformación en nuestro proyecto?",
+              answers: [
+                { text: "Cada vez que creamos o utilizamos el espacio vectorial de un objeto de la escena. Por ejemplo: En las clases Cube o Quad en el método get_model_matrix En la clase Camera en el método get_view_matrix y get_projection_matrix.", correct: true },
+                { text: "Cuando importamos un modelo 3D desde Blender y lo posicionamos directamente en la escena sin aplicar shaders ni cámaras adicionales. Además utilizan los métodos get_view_matrix y get_projection_matrix", correct: false },
+                { text: "Solamente cuando definimos las luces principales y sus intensidades para calcular reflejos y sombras dentro de la escena. Posterior a ello usamos los métodos get_view_matrix y get_projection_matrix", correct: false },
+                { text: "En los archivos de configuración JSON donde definimos los materiales, las texturas y las posiciones iniciales de los objetos.", correct: false }
+              ]
+            },
+            {
+              question: "¿Desde dónde se trazan los Rays en nuestro proyecto?",
+              answers: [
+                { text: "En nuestro proyecto, los Rays se trazan desde la posición de la cámara hacia cada píxel de la pantalla (en el caso del raytracing). En raycasting también desde la cámara, pero hacia la posición del mouse.", correct: true },
+                { text: "Los Rays se trazan desde el centro de la escena hacia cada objeto visible, siguiendo la dirección de sus normales.", correct: false },
+                { text: "Se lanzan desde la posición de cada vértice del modelo hacia la cámara para calcular el color de iluminación.", correct: false },
+                { text: "Los Rays se calculan desde el punto medio del terreno y se expanden hacia los bordes del mapa en direcciones aleatorias.", correct: false }
+              ]
+            },
+            {
+              question: "¿Qué función cumple la clase HitBox?",
+              answers: [
+                { text: "La clase HitBox detecta si un rayo colisiona con el objeto. Es un volumen simplificado (caja) que envuelve al objeto para hacer los cálculos de colisión más eficientes.", correct: true },
+                { text: "La clase HitBox determina el color promedio de una textura para aplicar sombreado básico en la superficie del objeto.", correct: false },
+                { text: "HitBox almacena los vértices y las normales del objeto para crear una versión de baja resolución del mismo.", correct: false },
+                { text: "Se encarga de proyectar los rayos de luz sobre el modelo para determinar el brillo especular de cada cara.", correct: false }
+              ]
+            },
+            {
+              question: "¿Cuántos Rays se necesitan para calcular si el mouse está sobre un objeto en pantalla?",
+              answers: [
+                { text: "Para calcular si el mouse está sobre un objeto de pantalla, trazamos un solo Ray. Se lanza un rayo desde la cámara en dirección a la posición del cursor en la escena 3D.", correct: true },
+                { text: "Se necesitan tres Rays, uno por cada eje del espacio tridimensional, para verificar la colisión en todas las direcciones posibles. Aunque esto depende ya que si sólo estamos trabajando en 2D sólo necesitaríamos configurar la ventana para usar solamente 2 Rays.", correct: false },
+                { text: "Se lanzan múltiples Rays en forma de cuadrícula alrededor del cursor para obtener una detección más precisa del área seleccionada.", correct: false },
+                { text: "El cálculo se realiza con dos Rays opuestos que permiten estimar la profundidad y posición del objeto bajo el cursor.", correct: false }
+              ]
+            },
+            {
+              question: "¿Para qué fin utilizamos Pyglet?",
+              answers: [
+                { text: "Usamos Pyglet para crear la ventana de la aplicación, gestionar el ciclo de renderizado (el loop principal) y capturar eventos de entrada como el mouse.", correct: true },
+                { text: "Pyglet se usa únicamente para calcular las colisiones (usando el HitBox y HitBoxOBB) entre los objetos dentro de la escena 3D de manera más rápida.", correct: false },
+                { text: "Lo utilizamos para definir las cámaras, los materiales y los shaders de todos los objetos (el cube y el Quad) en el proyecto.", correct: false },
+                { text: "Pyglet sirve como librería matemática para calcular transformaciones lineales y multiplicaciones de matrices.", correct: false }
+              ]
+            },
+            {
+              question: "¿Para qué fin utilizamos ModernGL?",
+              answers: [
+                { text: "Usamos ModernGL para simplificar el uso de OpenGL moderno. Es una wrapper de Python que hace más fácil trabajar con shaders, buffers y texturas.", correct: true },
+                { text: "ModernGL se utiliza para renderizar imágenes en 2D usando un motor físico de partículas basado en CPU. Sin embargo esto era al inicio dado que con el avance de la tecnología empezó a estar basado en la GPU", correct: false },
+                { text: "Lo usamos para crear animaciones avanzadas y efectos de sonido sincronizados con los shaders.", correct: false },
+                { text: "ModernGL es una herramienta que permite generar geometrías fractales sin necesidad de utilizar buffers manuales.", correct: false }
+              ]
+            },
+            {
+              question: "¿Qué atributos tiene un Model en nuestro proyecto?",
+              answers: [
+                { text: "Los atributos que tiene la clase Model en nuestro proyecto son: vertices (posiciones), indices, colors (colores), normals (normales) y texcoords (coordenadas UV).", correct: true },
+                { text: "Cada Model contiene los parámetros de iluminación, los tipos de textura, los efectos de postprocesado y la cámara activa.", correct: false },
+                { text: "Los Model almacenan las rutas de los shaders, los buffers de sonido y las referencias a los controladores de entrada.", correct: false },
+                { text: "Un Model guarda las transformaciones de rotación, escala y los valores de brillo aplicados por frame.", correct: false }
+              ]
+            },
+            {
+              question: "¿Qué ventaja ofrece separar los atributos de vértices (posiciones, colores, normales) en lugar de tener un único array?",
+              answers: [
+                { text: "Separar los atributos de los vértices permite mayor flexibilidad: podemos tener modelos que solo definen algunos atributos (por ejemplo, solo posición y normales sin colores). También hace el código más legible y permite que el shader consuma solo los atributos que necesita, optimizando la memoria.", correct: true },
+                { text: "Porque de esa forma se pueden ordenar más fácilmente los objetos dentro del archivo de configuración del motor de render (por ejemplo, solo posición y normales sin colores). También hace el código más legible y permite que el shader consuma solo los atributos que necesita, optimizando la memoria.", correct: false },
+                { text: "Para reducir la cantidad de llamadas al shader y combinar múltiples objetos en una sola textura global. También hace el código más legible y permite que el shader consuma solo los atributos que necesita, optimizando la memoria.", correct: false },
+                { text: "Porque así los vértices pueden almacenarse en archivos comprimidos y cargarse de forma asíncrona en la GPU. También hace el código más legible y permite que el shader consuma solo los atributos que necesita, optimizando la memoria.", correct: false }
+              ]
+            },
+            {
+              question: "¿Qué sucedería si los nombres de los atributos en la clase VertexLayout no coinciden con los del shader?",
+              answers: [
+                { text: "Si los nombres de los atributos en la clase VertexLayout no coinciden con los del shader, éste no recibiría los datos esperados. El atributo quedaría sin vincular y el shader usaría valores por defecto o basura, causando errores visuales o de ejecución.", correct: true },
+                { text: "El shader intentaría renombrar automáticamente las variables para ajustarse a la estructura recibida desde el CPU.", correct: false },
+                { text: "No pasaría nada, ya que ModernGL se encarga de reasignar los valores en tiempo de ejecución sin errores.", correct: false },
+                { text: "El motor asignaría los atributos por posición en lugar de por nombre, corrigiendo automáticamente el problema.", correct: false }
+              ]
+            },
+            {
+              question: "¿Cómo le pasamos los atributos del Model al Vertex Shader?",
+              answers: [
+                { text: "Los atributos del Model los pasamos al Vertex Shader a través de VBOs (que contienen los datos) organizados en un VAO (que describe cómo leerlos). En nuestro proyecto, la clase Graphics se encarga de crear estos buffers y vincularlos con el shader.", correct: true },
+                { text: "Los atributos se envían mediante archivos temporales en formato binario que se cargan directamente en la GPU.", correct: false },
+                { text: "Usamos variables globales en Python para compartir los datos del modelo directamente con el shader sin buffers.", correct: false },
+                { text: "Los atributos se escriben dentro del mismo código GLSL al inicio del Vertex Shader para evitar dependencias externas.", correct: false }
+              ]
+            },
+            {
+              question: "¿Qué responsabilidad tiene la clase Material?",
+              answers: [
+                { text: "Relacionar un shader con diferentes texturas.", correct: true },
+                { text: "Almacenar los vértices, índices y normales de un modelo para optimizar su renderizado.", correct: false },
+                { text: "Gestionar la cámara principal del proyecto y las luces que afectan la escena.", correct: false },
+                { text: "Encargarse de la creación de buffers y del envío de datos entre la CPU y la GPU.", correct: false }
+              ]
+            },
+            {
+              question: "¿Qué almacena la clase Texture y qué método utiliza para convertir los datos a un formato que OpenGL pueda usar?",
+              answers: [
+                { text: "La clase Texture almacena un ImageData (matriz de numpy con los colores de cada píxel). Usa el método get_bytes() para convertir esa matriz en bytes que OpenGL puede cargar en la GPU.", correct: true },
+                { text: "Texture almacena las normales y posiciones de los vértices, y usa el método normalize() para pasarlos al shader.", correct: false },
+                { text: "Guarda la configuración de los materiales y aplica el método compile_texture() para integrarlos en el VAO.", correct: false },
+                { text: "Contiene la información del color promedio de la escena y utiliza el método convert_to_rgb() para codificarla.", correct: false }
+              ]
+            },
+            {
+              question: "¿Por qué es importante que los nombres de las texturas (Texture.name) coincidan con los uniforms del Fragment shader?",
+              answers: [
+                { text: "Es importante que los nombres de las texturas (Texture.name) coincidan con los uniforms de nuestro shader para que el shader pueda referenciar correctamente la textura. El nombre actúa como identificador que conecta la textura cargada con el uniform sampler2D declarado en el shader.", correct: true },
+                { text: "Porque si no coinciden, OpenGL renombrará automáticamente las variables internas generando un sobreuso de memoria.", correct: false },
+                { text: "Para que ModernGL pueda crear los buffers de profundidad antes de enviar la textura al pipeline gráfico.", correct: false },
+                { text: "Porque los uniforms deben tener la misma longitud de nombre que las texturas para evitar conflictos de compilación.", correct: false }
+              ]
+            },
+            {
+              question: "¿Cómo le cambio el color a un cubo?",
+              answers: [
+                { text: "Para cambiarle el color a un cubo. Creo o Modifico una Texture con el color deseado, creo, si no existe, un Material que vincule esa textura con un shader, y asigno ese material al cubo cuando lo agrego a la escena.", correct: true },
+                { text: "Basta con modificar el nombre del objeto en el código y OpenGL aplicará un color aleatorio automáticamente.", correct: false },
+                { text: "Se debe actualizar el VAO del cubo con un nuevo set de vértices que representen los tonos deseados.", correct: false },
+                { text: "Hay que cambiar la posición del cubo en el espacio para que adopte un color diferente del entorno.", correct: false }
+              ]
+            },
+            {
+              question: "¿Cómo hago que uno de los cubos se deje de animar?",
+              answers: [
+                { text: "Para que uno de los cubos se deje de animar, al crear la instancia del Cube, le paso el parámetro animated=False.", correct: true },
+                { text: "Modifico la textura del cubo y cambio su canal alfa a cero para detener el movimiento automáticamente.", correct: false },
+                { text: "Desactivo temporalmente el shader principal y el cubo quedará sin animación ni renderizado.", correct: false },
+                { text: "Agrego una variable local 'stop=True' dentro del método update() para evitar que siga rotando.", correct: false }
+              ]
+            },
+            {
+              question: "¿Para qué usamos las coordenadas uv en el Fragment Shader?",
+              answers: [
+                { text: "Las coordenadas uv las utilizamos en el Fragment Shader para mapear una textura sobre la superficie. Las coordenadas UV indican qué píxel de la textura corresponde a cada fragmento que estamos renderizando.", correct: true },
+                { text: "Se usan para calcular las posiciones relativas de las luces en el modelo según su intensidad y dirección.", correct: false },
+                { text: "Sirven para almacenar los valores de transparencia y reflejo de cada cara del modelo tridimensional.", correct: false },
+                { text: "Las coordenadas uv controlan el orden de renderizado de las caras del objeto dentro del pipeline gráfico.", correct: false }
+              ]
+            },
+            {
+                "question": "¿Qué pasa visualmente si en el Vertex Shader no multiplicamos la posición de la figura primitiva por la matriz \"Mvp\" (Model-View-Projection)?",
+                "answers": [
+                    { "text": "El modelo aparecerá renderizado sin texturas, mostrando solo sus colores base, porque la información de mapeo UV no se procesa adecuadamente sin la transformación completa, afectando la correcta visualización del material.", "correct": false },
+                    { "text": "Si en el Vertex Shader no multiplicamos la posición del vértice por la matriz “Mvp”, el objeto no se transforma correctamente al espacio de la cámara. Lo más probable es que no se vea en pantalla, o se vea en una posición incorrecta ignorando la perspectiva y la ubicación de la cámara.", "correct": true },
+                    { "text": "El objeto se renderizará en el centro del mundo pero sin aplicar ninguna rotación o escala, permaneciendo en su pose original y sin deformarse según la vista del observador, aunque mantendrá su posición relativa.", "correct": false },
+                    { "text": "Se producirá un error de compilación en el shader, ya que la variable de salida gl_Position no recibirá un valor válido en coordenadas de recorte, lo que detendrá por completo el pipeline de renderizado antes de dibujar.", "correct": false }
+                ]
+            },
+            {
+                "question": "¿Qué pasa si deshabilito el Depth Test?",
+                "answers": [
+                    { "text": "Al omitir el testeo de profundidad, la GPU renderiza los objetos en el orden en que fueron agregados a la escena, provocando que los últimos en ser añadidos siempre se visualicen por encima de los primeros, sin importar su lejanía.", "correct": false },
+                    { "text": "Desactivar esta funcionalidad provoca que solo se rendericen los objetos que se encuentran dentro del frustum de visión, descartando cualquier geometría que esté parcialmente fuera de los límites definidos por los planos de la cámara.", "correct": false },
+                    { "text": "Si deshabilito el Depth Test en el proyecto, OpenGL deja de realizar la prueba de profundidad y no detecta qué está “por delante” y qué “por detrás”, por lo que no oculta aquellos fragmentos que son “tapados” por otros.", "correct": true },
+                    { "text": "Al desactivar la comprobación de profundidad, los objetos más lejanos se dibujarán siempre encima de los más cercanos, invirtiendo el orden visual de la escena y generando un efecto de renderizado incorrecto conocido como z-fighting.", "correct": false }
+                ]
+            },
+            {
+                "question": "¿El Vertex-Fragment shader se ejecuta una vez por toda la escena o individualmente para cada objeto?",
+                "answers": [
+                    { "text": "El pipeline de renderizado se activa por cada material presente en la escena; todos los elementos que compartan el mismo material se procesan juntos en una única pasada del programa de sombreado para optimizar el rendimiento.", "correct": false },
+                    { "text": "El Vertex-Fragment shader se ejecuta individualmente para cada objeto. Cada objeto tiene su propio draw call (vao.render), y en cada draw call el shader procesa todos los vértices y fragmentos de ese objeto específico.", "correct": true },
+                    { "text": "El programa de shaders se invoca una única vez por cada frame, procesando la geometría de todos los modelos de la escena en un solo gran lote para minimizar las llamadas a la GPU y mejorar la eficiencia del dibujado.", "correct": false },
+                    { "text": "La ejecución del sombreador depende de la cámara; se lanza una vez por cada vista activa, procesando los modelos visibles desde esa perspectiva en un único ciclo de dibujado para generar la imagen correspondiente a ese punto de vista.", "correct": false }
+                ]
+            },
+            {
+                "question": "¿Cuál es la principal diferencia entre Raycasting y Raytracing?",
+                "answers": [
+                    { "text": "La principal diferencia es que Raycasting solo detecta si hay colisión entre el rayo y un objeto (información básica). Raytracing utiliza el Raycasting para además calcular información detallada de la colisión como el color de la superficie, normales, reflexiones, refracciones y sombras para generar imágenes realistas.", "correct": true },
+                    { "text": "La distinción fundamental radica en el rendimiento; el primero es un método acelerado por hardware para consultas rápidas, mientras que el segundo es un algoritmo de software que se ejecuta en CPU para obtener resultados de alta fidelidad sin optimización de velocidad.", "correct": false },
+                    { "text": "La separación conceptual se basa en la cantidad de rayos lanzados; el primer método utiliza un único rayo para identificar un punto, mientras que el segundo emite un haz de rayos por píxel para promediar resultados y conseguir efectos de desenfoque y antialiasing.", "correct": false },
+                    { "text": "La divergencia clave está en el origen del rayo; en el primer caso, los rayos siempre parten de la cámara, pero en el segundo, los rayos se emiten desde las fuentes de luz para determinar qué superficies están iluminadas antes de calcular la visibilidad de la escena.", "correct": false }
+                ]
+            },
+            {
+                "question": "¿Cuántos Rays se trazan para renderizar un frame de pantalla? ¿De qué depende la cantidad?",
+                "answers": [
+                    { "text": "El número de rayos lanzados es equivalente a la cantidad de vértices totales en la escena, ya que se necesita un rayo por vértice para determinar su visibilidad desde la cámara.", "correct": false },
+                    { "text": "La cantidad de rayos emitidos por fotograma es igual al número de objetos presentes, pues se lanza un rayo a cada uno para verificar su posición y tamaño dentro del espacio.", "correct": false },
+                    { "text": "Se traza un número fijo de rayos, generalmente una potencia de dos como 1024, que se distribuyen por la pantalla para muestrear la escena y luego interpolar los colores.", "correct": false },
+                    { "text": "Para renderizar un frame de pantalla, se traza un Ray por cada píxel de la pantalla. Depende de la resolución: si la pantalla es 800x600, se trazan 480,000 rayos.", "correct": true }
+                ]
+            },
+            {
+                "question": "¿Por qué se utiliza un Quad en el proyecto de Raytracing?",
+                "answers": [
+                    { "text": "El Quad se emplea como una superficie de fondo para capturar las sombras proyectadas por los objetos de la escena, permitiendo que el algoritmo calcule correctamente las áreas ocluidas por la luz.", "correct": false },
+                    { "text": "Utilizamos un Quad en Raytracing porque funciona como una \"pantalla virtual\" donde se muestra el resultado del raytracing. La textura generada por el raytracer se mapea sobre el Quad para visualizarla.", "correct": true },
+                    { "text": "Se emplea un Quad como el objeto principal de colisión en la escena, ya que su geometría plana simplifica los cálculos matemáticos iniciales para probar la lógica de intersección de los rayos.", "correct": false },
+                    { "text": "Usamos el Quad para representar la fuente de luz principal en la escena; su superficie emite los rayos iniciales que luego rebotan en los objetos para simular la iluminación de forma global.", "correct": false }
+                ]
+            },
+            {
+                "question": "¿Por qué se utiliza el parámetro hittable en la clase Hit?",
+                "answers": [
+                    { "text": "La variable hittable se emplea para activar o desactivar la capacidad de un objeto de proyectar sombras sobre otros modelos. Cuando es `False`, el objeto se vuelve transparente a los rayos de sombra, aunque sigue siendo visible.", "correct": false },
+                    { "text": "El atributo hittable determina si un objeto puede ser seleccionado por el usuario mediante un clic del mouse. Si está en `False`, el sistema de raycasting lo omite, haciéndolo no interactivo pero aun visible en el render final.", "correct": false },
+                    { "text": "El parámetro hittable en la clase Hit lo utilizamos para controlar qué objetos deben considerarse en las colisiones del raytracing. Si hittable es False, el rayo ignora ese objeto (útil para el Quad de fondo, que solo sirve para mostrar la imagen y no debe colisionar).", "correct": true },
+                    { "text": "Se usa la propiedad hittable para optimizar el rendimiento del renderizado. Cuando es `False`, el objeto se excluye del árbol BVH, por lo que no se prueba su intersección, aunque todavía se dibuja en el pipeline de rasterización.", "correct": false }
+                ]
+            },
+            {
+                "question": "Si al ejecutar el programa el quad se renderiza completamente en rojo, ¿cuál es la causa más probable y cómo se soluciona?",
+                "answers": [
+                    { "text": "Si la pantalla renderiza completamente en rojo, puede ser porque el quad tiene configurada la propiedad “hittable” en True. También puede ser que la cantidad de objetos que hay en escena ocupan todos y cada uno de los píxeles de la pantalla. Se soluciona reduciendo la cantidad de objetos o indicando en la instancia del quad que su propiedad “hittable” es False.", "correct": true },
+                    { "text": "Un renderizado totalmente rojo indica un error en la matriz de proyección, que está colapsando la escena. Para arreglarlo, se debe verificar que los planos `near` y `far` no sean negativos o estén invertidos, y que la relación de aspecto de la cámara se calcule correctamente antes de renderizar.", "correct": false },
+                    { "text": "El color rojo en toda la pantalla sugiere que el shader no está recibiendo la textura correcta. La solución es revisar que el `binding` en Python coincida con el `sampler2D` en GLSL, y que el nombre del uniform sea el adecuado en el material asignado al quad.", "correct": false },
+                    { "text": "Esto sucede cuando el buffer de profundidad no se limpia entre fotogramas. Para corregirlo, es necesario añadir una llamada a `ctx.clear(depth=True)` al inicio del bucle de renderizado, asegurando que cada frame se dibuje sobre un lienzo limpio y sin datos de profundidad antiguos.", "correct": false }
+                ]
+            },
+            {
+                "question": "En la escena de CPU ¿Dónde configuramos el color del cielo?",
+                "answers": [
+                    { "text": "El tono del fondo se define directamente en el método `trace_ray` de la clase `RayTracer`, en la sección del `else` que se ejecuta cuando no hay colisiones.", "correct": false },
+                    { "text": "Se establece en el archivo `main.py`, al crear la instancia de la textura de fondo que posteriormente se asigna como parte del material del Quad principal.", "correct": false },
+                    { "text": "En la clase Camera, usando el método set_sky_colors() que define los colores superior e inferior del degradado del cielo.", "correct": true },
+                    { "text": "Lo ajustamos en la clase `Scene`, a través de una propiedad global que establece un color de limpieza para el contexto de OpenGL antes de cada ciclo de renderizado.", "correct": false }
+                ]
+            },
+            {
+                "question": "En raytracing por CPU ¿Dónde realizamos el trazado de rayos? ¿Qué da como resultado?",
+                "answers": [
+                    { "text": "El proceso se lleva a cabo en la función `on_mouse_click` de la clase `Scene` y genera una lista de objetos intersectados que se imprimen en consola, sin producir una imagen directamente, solo datos de colisión.", "correct": false },
+                    { "text": "El cálculo de rayos ocurre en `render_frame` de la clase `RayTracer`. El producto final es un archivo de imagen en formato PNG que se guarda en el disco y debe cargarse manualmente para poder ser visualizado.", "correct": false },
+                    { "text": "En raytracing por CPU trazamos los rayos en el método trace_ray de la clase RayTracer. Da como resultado un ImageData (matriz numpy) donde cada píxel tiene el color calculado según si el rayo colisionó con un objeto o con el cielo. Este ImageData luego se convierte a bytes y se carga como textura en el Quad.", "correct": true },
+                    { "text": "El trazado se ejecuta dentro del constructor de la clase `RayScene`. El resultado es una modificación de los colores de los vértices de los objetos, que luego son interpolados por el pipeline de rasterización para dibujar la imagen.", "correct": false }
+                ]
+            },
+            {
+                "question": "¿Por qué el raytracing en CPU es más lento que en GPU?",
+                "answers": [
+                    { "text": "La diferencia de velocidad radica en el acceso a la memoria. La CPU tiene mayor latencia al leer los datos de la RAM, mientras que la GPU opera sobre su VRAM de alta velocidad, donde la geometría y texturas están disponibles sin cuellos de botella.", "correct": false },
+                    { "text": "El rendimiento inferior en la CPU se explica por la falta de librerías optimizadas. La GPU utiliza drivers como OpenGL que gestionan el renderizado de manera eficiente, algo que debe simularse por software en el procesador principal, generando penalización.", "correct": false },
+                    { "text": "La lentitud en la unidad central de procesamiento se debe a que las operaciones de punto flotante son menos precisas, requiriendo cálculos adicionales de corrección de errores, mientras que las unidades gráficas tienen hardware especializado.", "correct": false },
+                    { "text": "El raytracing es más lento en CPU que en GPU porque en CPU los rayos se procesan secuencialmente uno tras otro (un solo núcleo o pocos núcleos). En GPU se usan work groups que procesan miles de rayos en paralelo simultáneamente, aprovechando los miles de núcleos de la GPU.", "correct": true }
+                ]
+            },
+            {
+                "question": "En la escena de GPU ¿Dónde configuramos el color del cielo? ¿Crees que se puede obtener de los archivos de Python? ¿Cómo se los paso al shader?",
+                "answers": [
+                    { "text": "El color del cielo se configura en el Compute Shader, en la parte del código que se ejecuta cuando el rayo no colisiona con ningún objeto. Sí, se puede obtener de Python: tomamos los colores de la clase Camera en la clase RaytracerGPU y los pasamos al shader como uniforms de tipo vec3.", "correct": true },
+                    { "text": "El tono del fondo se establece como el color de limpieza del contexto de ModernGL. Es posible configurarlo desde Python, pero el shader no puede modificarlo; simplemente renderiza sobre el fondo ya pintado, dejando transparentes las zonas sin colisión.", "correct": false },
+                    { "text": "El color del cielo se carga a través de una textura `samplerCube` que se envía al shader como un SSBO. Desde Python, se deben generar las seis caras del cubo y empaquetarlas en un buffer para que el shader pueda muestrear el cielo según la dirección.", "correct": false },
+                    { "text": "Se define en el Fragment Shader que renderiza el Quad, no en el Compute Shader. El color se pasa como un atributo de vértice desde Python, interpolándose entre los vértices del Quad para crear el gradiente, mientras el Compute Shader solo se encarga de los objetos.", "correct": false }
+                ]
+            },
+            {
+                "question": "En raytracing por GPU ¿Dónde realizamos el trazado de rayos? ¿Qué da como resultado?",
+                "answers": [
+                    { "text": "El trazado se ejecuta en el Vertex Shader, modificando las posiciones de los vértices de una malla plana para formar la imagen. El Fragment Shader solo aplica un color uniforme a esta geometría deformada por los rayos.", "correct": false },
+                    { "text": "El cálculo de rayos se realiza en la clase `RaytracerGPU` en Python. El producto es una lista de colores que se envía al Fragment Shader a través de un `uniform array` para pintar cada píxel del quad de salida.", "correct": false },
+                    { "text": "En raytracing por GPU los rayos se trazan en el método main() del Compute Shader. Da como resultado una textura de OpenGL donde cada píxel se escribe directamente en la GPU según si el rayo colisionó con un objeto o con el cielo.", "correct": true },
+                    { "text": "La traza de rayos ocurre en un hilo separado en la CPU, que genera un buffer de píxeles y se sube a la GPU en cada frame. El Compute Shader se limita a leer este buffer y copiarlo a la textura de salida.", "correct": false }
+                ]
+            },
+            {
+                "question": "¿Qué diferencia hay entre las clases Raytracer y RaytracerGPU?",
+                "answers": [
+                    { "text": "La distinción es que la versión de CPU realiza cálculos de iluminación de forma local píxel a píxel, mientras que la variante para la unidad gráfica se encarga de preparar los buffers de vértices y enviarlos a un pipeline de renderizado tradicional, delegando solo el sombreado final.", "correct": false },
+                    { "text": "La clase Raytracer (CPU) ejecuta el algoritmo de trazado de rayos en Python píxel por píxel y genera un ImageData que se pasa a bytes y se guardan en la textura que luego se renderiza en el Quad. Es decir, hace todo el raytracing. La clase RaytracerGPU prepara y envía los datos (SSBOs) al Compute Shader para que la GPU haga todo el trazado en paralelo. Es decir, prepara los datos que necesita el shader y no ocurre el raytracing en la misma clase, lo delega a la GPU.", "correct": true },
+                    { "text": "La primera implementa un sistema básico que solo detecta colisiones y las muestra en consola, sin generar una imagen. La segunda, en cambio, utiliza esos mismos cálculos de colisión para construir una representación visual completa con colores y materiales, procesando todo en la tarjeta de video.", "correct": false },
+                    { "text": "La versión para el procesador central emite rayos desde las luces para calcular sombras, mientras que la clase para la unidad de procesamiento gráfico lanza rayos desde la cámara para determinar la visibilidad. Ambas deben combinarse para obtener la imagen final con iluminación y oclusión.", "correct": false }
+                ]
+            },
+            {
+                "question": "¿Por qué usamos un Compute Shader y no el tradicional Vertex-Fragment shader?",
+                "answers": [
+                    { "text": "Se emplea un programa de cómputo porque es la única forma de escribir directamente sobre una textura en la memoria de la GPU, mientras que el pipeline clásico solo puede dibujar en el framebuffer principal de la pantalla, lo que limita los efectos de post-procesado.", "correct": false },
+                    { "text": "La razón principal es el rendimiento; los sombreadores de cómputo son una tecnología más moderna y están optimizados para ejecutar cualquier tipo de algoritmo matemático de forma mucho más rápida que el pipeline gráfico tradicional de vértices y fragmentos.", "correct": false },
+                    { "text": "Usamos Compute Shader para raytracing y no el clásico Vertex-Fragment shader porque necesitamos acceder a información de toda la escena simultáneamente para trazar rayos desde cualquier píxel hacia todos los objetos. El Vertex-Fragment shader está diseñado para procesar un objeto a la vez, mientras que el Compute Shader puede trabajar con toda la escena de forma global y paralela.", "correct": true },
+                    { "text": "La elección se debe a que los sombreadores de vértices y fragmentos no pueden manejar estructuras de datos complejas como arrays o matrices, limitándose a variables simples. El sombreador de cómputo es necesario para poder enviar toda la información de la escena.", "correct": false }
+                ]
+            },
+            {
+                "question": "¿Cómo se guardan datos complejos para enviar al Compute Shader?",
+                "answers": [
+                    { "text": "Para transferir información elaborada al programa de cómputo, esta se codifica en los canales de color de una textura de datos, que el sombreador lee como una imagen para extraer la información de matrices y vectores.", "correct": false },
+                    { "text": "La información se transmite utilizando una lista de uniforms. Cada objeto de la escena tiene su propio conjunto de variables globales que se actualizan desde Python antes de ejecutar el programa de cómputo en la GPU.", "correct": false },
+                    { "text": "Se envían como atributos de un único vértice gigante que se pasa al programa de cómputo. Cada atributo contiene un fragmento de la información de la escena, como las matrices de transformación o los materiales.", "correct": false },
+                    { "text": "Para enviar al Compute Shader datos complejos, se guardan en SSBOs (Shader Storage Buffer Objects), que son buffers que pueden almacenar estructuras de datos complejas (arrays de matrices, vectores, structs, etc.) accesibles desde el shader.", "correct": true }
+                ]
+            },
+            {
+                "question": "¿Por qué usamos SSBOs?",
+                "answers": [
+                    { "text": "Utilizamos estos buffers de almacenamiento porque son la única manera de permitir que el programa de cómputo escriba resultados, ya que las variables uniformes son de solo lectura y no pueden modificarse desde la GPU.", "correct": false },
+                    { "text": "Los empleamos principalmente por su velocidad de acceso, ya que residen en una caché especial de la GPU que es mucho más rápida que la memoria utilizada por las variables uniformes tradicionales, optimizando el rendimiento.", "correct": false },
+                    { "text": "Usamos SSBOs porque necesitamos enviar grandes cantidades de datos estructurados al shader (como las transformaciones de todos los objetos, sus materiales, el BVH, etc.) y los uniforms tradicionales tienen límites de tamaño muy pequeños.", "correct": true },
+                    { "text": "Se usan porque garantizan que la disposición de los datos en la memoria de la GPU sea idéntica a la de la CPU, evitando problemas de alineación que ocurrirían si se usaran otros tipos de buffers para estructuras complejas.", "correct": false }
+                ]
+            },
+            {
+                "question": "¿Cómo se declara un SSBO en el compute shader?",
+                "answers": [
+                    { "text": "En el sombreador, se define con la directiva `uniform buffer` y se le asigna un nombre y un conjunto de variables internas.", "correct": false },
+                    { "text": "Un SSBO se declara en el shader con la palabra clave \"buffer\" seguida del layout de binding.", "correct": true },
+                    { "text": "Se utiliza la palabra reservada `storage` junto con un `layout` que especifica el índice de la unidad de memoria asignada.", "correct": false },
+                    { "text": "Se define mediante la palabra clave `shared` para indicar que es una memoria accesible tanto para lectura como para escritura.", "correct": false }
+                ]
+            },
+            {
+                "question": "¿Qué importa más: el binding o el nombre de la variable?",
+                "answers": [
+                    { "text": "El nombre es más relevante, ya que es la forma en que el código de Python identifica el recurso al que se está enviando la información.", "correct": false },
+                    { "text": "Ambos son igualmente importantes; si el nombre de la variable o el índice de enlace no coinciden, la conexión de datos fallará.", "correct": false },
+                    { "text": "Importa más el binding que el nombre de la variable. El binding indica la ubicación exacta en memoria donde están los datos. El nombre de la variable es sólo para referencia interna del shader.", "correct": true },
+                    { "text": "Ninguno de los dos es crucial, ya que los datos se vinculan por el orden en que se declaran, siendo el primer buffer el índice 0, el segundo el 1, etc.", "correct": false }
+                ]
+            },
+            {
+                "question": "¿Qué guarda la variable models_f? ¿Para qué se usa?",
+                "answers": [
+                    { "text": "Almacena las matrices de proyección y vista de la cámara, que se usan para convertir las coordenadas de los vértices al espacio de la pantalla.", "correct": false },
+                    { "text": "En la variable models_f se guardan las matrices de transformación modelo (Model matrix) de cada objeto en la escena. Se usa para transformar los objetos de su espacio local al espacio del mundo.", "correct": true },
+                    { "text": "Contiene los datos de los vértices de todos los modelos de la escena, que se leen para realizar los cálculos de intersección de los rayos.", "correct": false },
+                    { "text": "Guarda una lista de colores de material para cada objeto, que se aplica a los píxeles cuando un rayo impacta en una superficie.", "correct": false }
+                ]
+            },
+            {
+                "question": "¿Qué guarda la variable inv_f? ¿Para qué se usa?",
+                "answers": [
+                    { "text": "Conserva las matrices que invierten la proyección de la cámara, utilizadas para calcular la posición 3D a partir de una coordenada 2D de la pantalla.", "correct": false },
+                    { "text": "Almacena las matrices que anulan la rotación de los objetos, permitiendo que los cálculos de iluminación se realicen como si no estuvieran girados.", "correct": false },
+                    { "text": "En la variable inv_f se guardan las matrices inversas de transformación de cada objeto. Se usa para transformar los rayos del espacio del mundo al espacio local de cada objeto, facilitando el cálculo de colisiones en las coordenadas originales del objeto.", "correct": true },
+                    { "text": "Contiene las matrices opuestas a las de vista, que se emplean para posicionar la fuente de luz en el sistema de coordenadas de la cámara.", "correct": false }
+                ]
+            },
+            {
+                "question": "¿Qué guarda la variable mats_f? ¿Para qué se usa?",
+                "answers": [
+                    { "text": "Almacena una lista de matrices de textura para cada objeto, que se emplean para mapear correctamente las coordenadas UV en las superficies.", "correct": false },
+                    { "text": "Contiene las matrices de rotación de cada objeto, que se utilizan para calcular la orientación de las normales de las superficies al aplicar la iluminación.", "correct": false },
+                    { "text": "En la variable mats_f se guarda la información de los materiales de cada objeto (colores y propiedades como reflectividad). Se usa para calcular el color final de los píxeles al renderizar.", "correct": true },
+                    { "text": "Guarda las matrices de escala de cada modelo, que se aplican para determinar el tamaño de las cajas de colisión en el algoritmo de BVH.", "correct": false }
+                ]
+            },
+            {
+                "question": "¿Qué guarda la variable primitives? ¿Para qué se usa?",
+                "answers": [
+                    { "text": "La variable primitives guarda información de las primitivas geométricas (como los vértices o bounds de los objetos). Se usa para construir y recorrer el BVH al hacer las pruebas de colisión.", "correct": true },
+                    { "text": "Contiene los índices que definen los triángulos de cada modelo, utilizados por el pipeline de rasterización para dibujar las mallas.", "correct": false },
+                    { "text": "Almacena los tipos de geometría de cada objeto (cubo, esfera, etc.), permitiendo al shader elegir el algoritmo de intersección adecuado.", "correct": false },
+                    { "text": "Guarda los colores base de cada primitiva, que se leen para aplicar el sombreado plano antes de los cálculos de iluminación complejos.", "correct": false }
+                ]
+            },
+            {
+                "question": "En resumidas palabras ¿Para qué usamos el BVH?",
+                "answers": [
+                    { "text": "Se utiliza para almacenar la geometría de la escena en un formato comprimido que reduce el uso de memoria en la tarjeta gráfica y acelera los tiempos de carga.", "correct": false },
+                    { "text": "Lo empleamos para determinar el orden de renderizado de los objetos, dibujando primero los más cercanos a la cámara para aprovechar la oclusión y mejorar el rendimiento.", "correct": false },
+                    { "text": "Usamos el BVH para optimizar las colisiones organizando los objetos en una jerarquía espacial. Permite descartar rápidamente grupos enteros de objetos que no pueden ser alcanzados por un rayo, evitando hacer pruebas de colisión innecesarias (como ver si un rayo que va hacia la derecha colisiona con un objeto que está en la izquierda).", "correct": true },
+                    { "text": "Sirve para subdividir los modelos más complejos en mallas de menor resolución (LODs), que se seleccionan según la distancia a la cámara para optimizar el dibujado.", "correct": false }
+                ]
+            },
+            {
+                "question": "¿Qué efecto visual obtenemos si la luz es completamente perpendicular a la superficie?",
+                "answers": [
+                    { "text": "Se genera un brillo especular muy intenso en el punto de incidencia, ya que el ángulo de reflexión coincide perfectamente con la normal.", "correct": false },
+                    { "text": "Una luz completamente perpendicular a la superficie la ilumina al máximo (máxima intensidad), ya que recibe la luz directamente de frente.", "correct": true },
+                    { "text": "La superficie no recibe iluminación directa, apareciendo oscura, ya que los rayos de luz inciden de forma rasante y no la alcanzan.", "correct": false },
+                    { "text": "Produce una sombra muy nítida y definida detrás del objeto, porque el ángulo de incidencia maximiza la oclusión de la luz.", "correct": false }
+                ]
+            },
+            {
+                "question": "¿Qué efecto visual obtenemos si la luz es completamente paralela a la superficie?",
+                "answers": [
+                    { "text": "Se produce el máximo brillo difuso, ya que la energía lumínica se distribuye uniformemente a lo largo de toda el área expuesta.", "correct": false },
+                    { "text": "Se crea un contorno iluminado muy marcado, conocido como 'rim lighting', que resalta la silueta del objeto contra el fondo.", "correct": false },
+                    { "text": "Una luz completamente paralela a la superficie la deja sin iluminación (solo se ve la luz ambiental), ya que la luz no incide sobre ella sino que pasa de largo.", "correct": true },
+                    { "text": "Genera un reflejo especular muy alargado a lo largo de la superficie, ya que los rayos se reflejan en un ángulo muy bajo.", "correct": false }
+                ]
+            },
+            {
+                "question": "¿Qué efecto visual añade la luz ambiental?",
+                "answers": [
+                    { "text": "La luz ambiental proporciona iluminación base uniforme a toda la escena. Hace que los objetos sean visibles incluso en zonas sin luz directa, evitando sombras completamente negras.", "correct": true },
+                    { "text": "Este componente lumínico crea reflejos brillantes y nítidos en las superficies pulidas, simulando el comportamiento de materiales como los metales.", "correct": false },
+                    { "text": "Produce un sombreado suave que define el volumen de los objetos, haciendo que las caras orientadas hacia la luz se vean más claras que las demás.", "correct": false },
+                    { "text": "Genera halos y destellos alrededor de las fuentes de luz más intensas, simulando efectos atmosféricos como el resplandor o la niebla.", "correct": false }
+                ]
+            },
+            {
+                "question": "¿Qué efecto visual añade la luz difusa?",
+                "answers": [
+                    { "text": "Este tipo de iluminación simula la luz que rebota en el entorno, rellenando las áreas en sombra con un color suave y evitando el negro absoluto.", "correct": false },
+                    { "text": "La luz difusa crea el efecto de sombreado en las superficies según el ángulo de la luz. Las caras perpendiculares a la luz se ven más claras y las paralelas más oscuras, dando volumen al objeto.", "correct": true },
+                    { "text": "Añade reflejos especulares muy concentrados en las superficies, lo que simula el brillo característico de los materiales pulidos o húmedos.", "correct": false },
+                    { "text": "Es responsable de la transparencia y la refracción, calculando cómo la luz atraviesa los materiales y desvía su trayectoria, como en el vidrio o el agua.", "correct": false }
+                ]
+            },
+            {
+                "question": "¿Qué efecto visual añade la luz especular?",
+                "answers": [
+                    { "text": "La luz especular crea brillos o reflejos puntuales en las superficies, simulando materiales brillantes o pulidos. Se ve más intenso cuando el ángulo de reflexión coincide con la dirección de la cámara.", "correct": true },
+                    { "text": "Este componente lumínico proporciona una iluminación constante a toda la escena, asegurando que ninguna parte quede completamente oscura.", "correct": false },
+                    { "text": "Crea el sombreado principal de los objetos, haciendo que las caras que apuntan hacia la fuente de luz se vean más iluminadas y con volumen.", "correct": false },
+                    { "text": "Es la responsable de proyectar las sombras de los objetos sobre otras superficies, calculando las áreas que están ocluidas de la luz.", "correct": false }
+                ]
+            },
+            {
+                "question": "¿Cómo obtenemos una escena con sombras más oscuras (o menos suaves)?",
+                "answers": [
+                    { "text": "Para obtener sombras menos suaves, en el método calculateShadow del Compute Shader reducimos el porcentaje de luz que se devuelve cuando el rayo hace hit (está en sombra). Valores más bajos generan sombras más oscuras.", "correct": true },
+                    { "text": "Se logra aumentando la intensidad del componente de luz ambiental en el modelo de iluminación, lo que rellena las áreas ocluidas con más brillo y las hace menos intensas.", "correct": false },
+                    { "text": "Para conseguir un efecto más marcado, se debe incrementar el exponente especular en el cálculo de Blinn-Phong, concentrando el brillo y oscureciendo el resto de la superficie.", "correct": false },
+                    { "text": "Se consigue al disminuir la distancia del `far plane` de la cámara, lo que comprime el rango de profundidad y provoca que el `depth buffer` tenga menos precisión en las zonas lejanas.", "correct": false }
+                ]
+            },
+            
+            // Parte 3: Exclusivas de conceptos vistos en el apartado para Proyecto en Grupo:
+            {
+                "question": "¿Qué diferencia hay entre las clases Raytracer y RaytracerGPU?",
+                "answers": [
+                    { "text": "La distinción es que la versión de CPU realiza cálculos de iluminación de forma local píxel a píxel, mientras que la variante para la unidad gráfica se encarga de preparar los buffers de vértices y enviarlos a un pipeline de renderizado tradicional, delegando solo el sombreado final.", "correct": false },
+                    { "text": "La clase Raytracer (CPU) ejecuta el algoritmo de trazado de rayos en Python píxel por píxel y genera un ImageData que se pasa a bytes y se guardan en la textura que luego se renderiza en el Quad. Es decir, hace todo el raytracing. La clase RaytracerGPU prepara y envía los datos (SSBOs) al Compute Shader para que la GPU haga todo el trazado en paralelo. Es decir, prepara los datos que necesita el shader y no ocurre el raytracing en la misma clase, lo delega a la GPU.", "correct": true },
+                    { "text": "La primera implementa un sistema básico que solo detecta colisiones y las muestra en consola, sin generar una imagen. La segunda, en cambio, utiliza esos mismos cálculos de colisión para construir una representación visual completa con colores y materiales, procesando todo en la tarjeta de video.", "correct": false },
+                    { "text": "La versión para el procesador central emite rayos desde las luces para calcular sombras, mientras que la clase para la unidad de procesamiento gráfico lanza rayos desde la cámara para determinar la visibilidad. Ambas deben combinarse para obtener la imagen final con iluminación y oclusión.", "correct": false }
+                ]
+            },
+            {
+                "question": "¿Por qué usamos un Compute Shader y no el tradicional Vertex-Fragment shader?",
+                "answers": [
+                    { "text": "Se emplea un programa de cómputo porque es la única forma de escribir directamente sobre una textura en la memoria de la GPU, mientras que el pipeline clásico solo puede dibujar en el framebuffer principal de la pantalla, lo que limita los efectos de post-procesado.", "correct": false },
+                    { "text": "La razón principal es el rendimiento; los sombreadores de cómputo son una tecnología más moderna y están optimizados para ejecutar cualquier tipo de algoritmo matemático de forma mucho más rápida que el pipeline gráfico tradicional de vértices y fragmentos.", "correct": false },
+                    { "text": "Usamos Compute Shader para raytracing y no el clásico Vertex-Fragment shader porque necesitamos acceder a información de toda la escena simultáneamente para trazar rayos desde cualquier píxel hacia todos los objetos. El Vertex-Fragment shader está diseñado para procesar un objeto a la vez, mientras que el Compute Shader puede trabajar con toda la escena de forma global y paralela.", "correct": true },
+                    { "text": "La elección se debe a que los sombreadores de vértices y fragmentos no pueden manejar estructuras de datos complejas como arrays o matrices, limitándose a variables simples. El sombreador de cómputo es necesario para poder enviar toda la información de la escena.", "correct": false }
+                ]
+            },
+            {
+                "question": "¿Cómo se guardan datos complejos para enviar al Compute Shader?",
+                "answers": [
+                    { "text": "Para transferir información elaborada al programa de cómputo, esta se codifica en los canales de color de una textura de datos, que el sombreador lee como una imagen para extraer la información de matrices y vectores.", "correct": false },
+                    { "text": "La información se transmite utilizando una lista de uniforms. Cada objeto de la escena tiene su propio conjunto de variables globales que se actualizan desde Python antes de ejecutar el programa de cómputo en la GPU.", "correct": false },
+                    { "text": "Se envían como atributos de un único vértice gigante que se pasa al programa de cómputo. Cada atributo contiene un fragmento de la información de la escena, como las matrices de transformación o los materiales.", "correct": false },
+                    { "text": "Para enviar al Compute Shader datos complejos, se guardan en SSBOs (Shader Storage Buffer Objects), que son buffers que pueden almacenar estructuras de datos complejas (arrays de matrices, vectores, structs, etc.) accesibles desde el shader.", "correct": true }
+                ]
+            },
+            {
+                "question": "¿Por qué usamos SSBOs?",
+                "answers": [
+                    { "text": "Utilizamos estos buffers de almacenamiento porque son la única manera de permitir que el programa de cómputo escriba resultados, ya que las variables uniformes son de solo lectura y no pueden modificarse desde la GPU.", "correct": false },
+                    { "text": "Los empleamos principalmente por su velocidad de acceso, ya que residen en una caché especial de la GPU que es mucho más rápida que la memoria utilizada por las variables uniformes tradicionales, optimizando el rendimiento.", "correct": false },
+                    { "text": "Usamos SSBOs porque necesitamos enviar grandes cantidades de datos estructurados al shader (como las transformaciones de todos los objetos, sus materiales, el BVH, etc.) y los uniforms tradicionales tienen límites de tamaño muy pequeños.", "correct": true },
+                    { "text": "Se usan porque garantizan que la disposición de los datos en la memoria de la GPU sea idéntica a la de la CPU, evitando problemas de alineación que ocurrirían si se usaran otros tipos de buffers para estructuras complejas.", "correct": false }
+                ]
+            },
+            {
+                "question": "¿Cómo se declara un SSBO en el compute shader?",
+                "answers": [
+                    { "text": "En el sombreador, se define con la directiva `uniform buffer` y se le asigna un nombre y un conjunto de variables internas.", "correct": false },
+                    { "text": "Un SSBO se declara en el shader con la palabra clave \"buffer\" seguida del layout de binding.", "correct": true },
+                    { "text": "Se utiliza la palabra reservada `storage` junto con un `layout` que especifica el índice de la unidad de memoria asignada.", "correct": false },
+                    { "text": "Se define mediante la palabra clave `shared` para indicar que es una memoria accesible tanto para lectura como para escritura.", "correct": false }
+                ]
+            },
+            {
+                "question": "¿Qué importa más: el binding o el nombre de la variable?",
+                "answers": [
+                    { "text": "El nombre es más relevante, ya que es la forma en que el código de Python identifica el recurso al que se está enviando la información.", "correct": false },
+                    { "text": "Ambos son igualmente importantes; si el nombre de la variable o el índice de enlace no coinciden, la conexión de datos fallará.", "correct": false },
+                    { "text": "Importa más el binding que el nombre de la variable. El binding indica la ubicación exacta en memoria donde están los datos. El nombre de la variable es sólo para referencia interna del shader.", "correct": true },
+                    { "text": "Ninguno de los dos es crucial, ya que los datos se vinculan por el orden en que se declaran, siendo el primer buffer el índice 0, el segundo el 1, etc.", "correct": false }
+                ]
+            },
+            {
+                "question": "¿Qué guarda la variable models_f? ¿Para qué se usa?",
+                "answers": [
+                    { "text": "Almacena las matrices de proyección y vista de la cámara, que se usan para convertir las coordenadas de los vértices al espacio de la pantalla.", "correct": false },
+                    { "text": "En la variable models_f se guardan las matrices de transformación modelo (Model matrix) de cada objeto en la escena. Se usa para transformar los objetos de su espacio local al espacio del mundo.", "correct": true },
+                    { "text": "Contiene los datos de los vértices de todos los modelos de la escena, que se leen para realizar los cálculos de intersección de los rayos.", "correct": false },
+                    { "text": "Guarda una lista de colores de material para cada objeto, que se aplica a los píxeles cuando un rayo impacta en una superficie.", "correct": false }
+                ]
+            },
+            {
+                "question": "¿Qué guarda la variable inv_f? ¿Para qué se usa?",
+                "answers": [
+                    { "text": "Conserva las matrices que invierten la proyección de la cámara, utilizadas para calcular la posición 3D a partir de una coordenada 2D de la pantalla.", "correct": false },
+                    { "text": "Almacena las matrices que anulan la rotación de los objetos, permitiendo que los cálculos de iluminación se realicen como si no estuvieran girados.", "correct": false },
+                    { "text": "En la variable inv_f se guardan las matrices inversas de transformación de cada objeto. Se usa para transformar los rayos del espacio del mundo al espacio local de cada objeto, facilitando el cálculo de colisiones en las coordenadas originales del objeto.", "correct": true },
+                    { "text": "Contiene las matrices opuestas a las de vista, que se emplean para posicionar la fuente de luz en el sistema de coordenadas de la cámara.", "correct": false }
+                ]
+            },
+            {
+                "question": "¿Qué guarda la variable mats_f? ¿Para qué se usa?",
+                "answers": [
+                    { "text": "Almacena una lista de matrices de textura para cada objeto, que se emplean para mapear correctamente las coordenadas UV en las superficies.", "correct": false },
+                    { "text": "Contiene las matrices de rotación de cada objeto, que se utilizan para calcular la orientación de las normales de las superficies al aplicar la iluminación.", "correct": false },
+                    { "text": "En la variable mats_f se guarda la información de los materiales de cada objeto (colores y propiedades como reflectividad). Se usa para calcular el color final de los píxeles al renderizar.", "correct": true },
+                    { "text": "Guarda las matrices de escala de cada modelo, que se aplican para determinar el tamaño de las cajas de colisión en el algoritmo de BVH.", "correct": false }
+                ]
+            },
+            {
+                "question": "¿Qué guarda la variable primitives? ¿Para qué se usa?",
+                "answers": [
+                    { "text": "La variable primitives guarda información de las primitivas geométricas (como los vértices o bounds de los objetos). Se usa para construir y recorrer el BVH al hacer las pruebas de colisión.", "correct": true },
+                    { "text": "Contiene los índices que definen los triángulos de cada modelo, utilizados por el pipeline de rasterización para dibujar las mallas.", "correct": false },
+                    { "text": "Almacena los tipos de geometría de cada objeto (cubo, esfera, etc.), permitiendo al shader elegir el algoritmo de intersección adecuado.", "correct": false },
+                    { "text": "Guarda los colores base de cada primitiva, que se leen para aplicar el sombreado plano antes de los cálculos de iluminación complejos.", "correct": false }
+                ]
+            },
+            {
+                "question": "En resumidas palabras ¿Para qué usamos el BVH?",
+                "answers": [
+                    { "text": "Se utiliza para almacenar la geometría de la escena en un formato comprimido que reduce el uso de memoria en la tarjeta gráfica y acelera los tiempos de carga.", "correct": false },
+                    { "text": "Lo empleamos para determinar el orden de renderizado de los objetos, dibujando primero los más cercanos a la cámara para aprovechar la oclusión y mejorar el rendimiento.", "correct": false },
+                    { "text": "Usamos el BVH para optimizar las colisiones organizando los objetos en una jerarquía espacial. Permite descartar rápidamente grupos enteros de objetos que no pueden ser alcanzados por un rayo, evitando hacer pruebas de colisión innecesarias (como ver si un rayo que va hacia la derecha colisiona con un objeto que está en la izquierda).", "correct": true },
+                    { "text": "Sirve para subdividir los modelos más complejos en mallas de menor resolución (LODs), que se seleccionan según la distancia a la cámara para optimizar el dibujado.", "correct": false }
+                ]
+            },
+            {
+                "question": "¿Qué efecto visual obtenemos si la luz es completamente perpendicular a la superficie?",
+                "answers": [
+                    { "text": "Se genera un brillo especular muy intenso en el punto de incidencia, ya que el ángulo de reflexión coincide perfectamente con la normal.", "correct": false },
+                    { "text": "Una luz completamente perpendicular a la superficie la ilumina al máximo (máxima intensidad), ya que recibe la luz directamente de frente.", "correct": true },
+                    { "text": "La superficie no recibe iluminación directa, apareciendo oscura, ya que los rayos de luz inciden de forma rasante y no la alcanzan.", "correct": false },
+                    { "text": "Produce una sombra muy nítida y definida detrás del objeto, porque el ángulo de incidencia maximiza la oclusión de la luz.", "correct": false }
+                ]
+            },
+            {
+                "question": "¿Qué efecto visual obtenemos si la luz es completamente paralela a la superficie?",
+                "answers": [
+                    { "text": "Se produce el máximo brillo difuso, ya que la energía lumínica se distribuye uniformemente a lo largo de toda el área expuesta.", "correct": false },
+                    { "text": "Se crea un contorno iluminado muy marcado, conocido como 'rim lighting', que resalta la silueta del objeto contra el fondo.", "correct": false },
+                    { "text": "Una luz completamente paralela a la superficie la deja sin iluminación (solo se ve la luz ambiental), ya que la luz no incide sobre ella sino que pasa de largo.", "correct": true },
+                    { "text": "Genera un reflejo especular muy alargado a lo largo de la superficie, ya que los rayos se reflejan en un ángulo muy bajo.", "correct": false }
+                ]
+            },
+            {
+                "question": "¿Qué efecto visual añade la luz ambiental?",
+                "answers": [
+                    { "text": "La luz ambiental proporciona iluminación base uniforme a toda la escena. Hace que los objetos sean visibles incluso en zonas sin luz directa, evitando sombras completamente negras.", "correct": true },
+                    { "text": "Este componente lumínico crea reflejos brillantes y nítidos en las superficies pulidas, simulando el comportamiento de materiales como los metales.", "correct": false },
+                    { "text": "Produce un sombreado suave que define el volumen de los objetos, haciendo que las caras orientadas hacia la luz se vean más claras que las demás.", "correct": false },
+                    { "text": "Genera halos y destellos alrededor de las fuentes de luz más intensas, simulando efectos atmosféricos como el resplandor o la niebla.", "correct": false }
+                ]
+            },
+            {
+                "question": "¿Qué efecto visual añade la luz difusa?",
+                "answers": [
+                    { "text": "Este tipo de iluminación simula la luz que rebota en el entorno, rellenando las áreas en sombra con un color suave y evitando el negro absoluto.", "correct": false },
+                    { "text": "La luz difusa crea el efecto de sombreado en las superficies según el ángulo de la luz. Las caras perpendiculares a la luz se ven más claras y las paralelas más oscuras, dando volumen al objeto.", "correct": true },
+                    { "text": "Añade reflejos especulares muy concentrados en las superficies, lo que simula el brillo característico de los materiales pulidos o húmedos.", "correct": false },
+                    { "text": "Es responsable de la transparencia y la refracción, calculando cómo la luz atraviesa los materiales y desvía su trayectoria, como en el vidrio o el agua.", "correct": false }
+                ]
+            },
+            {
+                "question": "¿Qué efecto visual añade la luz especular?",
+                "answers": [
+                    { "text": "La luz especular crea brillos o reflejos puntuales en las superficies, simulando materiales brillantes o pulidos. Se ve más intenso cuando el ángulo de reflexión coincide con la dirección de la cámara.", "correct": true },
+                    { "text": "Este componente lumínico proporciona una iluminación constante a toda la escena, asegurando que ninguna parte quede completamente oscura.", "correct": false },
+                    { "text": "Crea el sombreado principal de los objetos, haciendo que las caras que apuntan hacia la fuente de luz se vean más iluminadas y con volumen.", "correct": false },
+                    { "text": "Es la responsable de proyectar las sombras de los objetos sobre otras superficies, calculando las áreas que están ocluidas de la luz.", "correct": false }
+                ]
+            },
+            {
+                "question": "¿Cómo obtenemos una escena con sombras más oscuras (o menos suaves)?",
+                "answers": [
+                    { "text": "Para obtener sombras menos suaves, en el método calculateShadow del Compute Shader reducimos el porcentaje de luz que se devuelve cuando el rayo hace hit (está en sombra). Valores más bajos generan sombras más oscuras.", "correct": true },
+                    { "text": "Se logra aumentando la intensidad del componente de luz ambiental en el modelo de iluminación, lo que rellena las áreas ocluidas con más brillo y las hace menos intensas.", "correct": false },
+                    { "text": "Para conseguir un efecto más marcado, se debe incrementar el exponente especular en el cálculo de Blinn-Phong, concentrando el brillo y oscureciendo el resto de la superficie.", "correct": false },
+                    { "text": "Se consigue al disminuir la distancia del `far plane` de la cámara, lo que comprime el rango de profundidad y provoca que el `depth buffer` tenga menos precisión en las zonas lejanas.", "correct": false }
+                ]
+            }
+        ];
+
+        const questionTextElement = document.getElementById('question-text');
+        const answerButtonsElement = document.getElementById('answer-buttons');
+        const nextButton = document.getElementById('next-btn');
+        const questionCounterElement = document.getElementById('question-counter');
+        const scoreElement = document.getElementById('score');
+
+        const quizArea = document.getElementById('quiz-area');
+        const resultsContainer = document.getElementById('results-container');
+        const resultsText = document.getElementById('results-text');
+        const playAgainBtn = document.getElementById('play-again-btn');
+
+        let shuffledQuestions, currentQuestionIndex;
+        let score = 0;
+
+        function startQuiz() {
+            score = 0;
+            shuffledQuestions = questions.sort(() => Math.random() - .5);
+            currentQuestionIndex = 0;
+            quizArea.style.display = 'block';
+            resultsContainer.style.display = 'none';
+            nextButton.style.display = 'none';
+            nextButton.innerHTML = "Siguiente Pregunta →";
+            showQuestion();
+        }
+
+        function showQuestion() {
+            resetState();
+            let currentQuestion = shuffledQuestions[currentQuestionIndex];
+            let questionNo = currentQuestionIndex + 1;
+            questionTextElement.innerText = currentQuestion.question;
+            questionCounterElement.innerText = `Pregunta ${questionNo} de ${shuffledQuestions.length}`;
+            scoreElement.innerText = `Puntaje: ${score}`;
+
+            currentQuestion.answers.forEach(answer => {
+                const button = document.createElement('button');
+                button.innerText = answer.text;
+                button.classList.add('btn');
+                answerButtonsElement.appendChild(button);
+                if (answer.correct) {
+                    button.dataset.correct = answer.correct;
+                }
+                button.addEventListener('click', selectAnswer);
+            });
+        }
+
+        function resetState() {
+            nextButton.style.display = 'none';
+            while (answerButtonsElement.firstChild) {
+                answerButtonsElement.removeChild(answerButtonsElement.firstChild);
+            }
+        }
+
+        function selectAnswer(e) {
+            const selectedBtn = e.target;
+            const isCorrect = selectedBtn.dataset.correct === "true";
+
+            if (isCorrect) {
+                selectedBtn.classList.add('correct');
+                score++;
+                scoreElement.innerText = `Puntaje: ${score}`;
+            } else {
+                selectedBtn.classList.add('incorrect');
+            }
+
+            Array.from(answerButtonsElement.children).forEach(button => {
+                if (button.dataset.correct === "true") {
+                    button.classList.add('correct');
+                }
+                button.disabled = true;
+            });
+
+            if (shuffledQuestions.length > currentQuestionIndex + 1) {
+                 nextButton.style.display = 'block';
+            } else {
+                nextButton.innerHTML = "Ver Resultados";
+                nextButton.style.display = 'block';
+            }
+        }
+
+        function handleNextButton() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < shuffledQuestions.length) {
+                showQuestion();
+            } else {
+                showResults();
+            }
+        }
+        
+        function showResults(){
+             quizArea.style.display = 'none';
+             resultsContainer.style.display = 'block';
+             let finalMessage = `¡Juego Terminado! Obtuviste ${score} de ${shuffledQuestions.length} respuestas correctas.`;
+             if(score / shuffledQuestions.length > 0.7) {
+                 finalMessage += " ¡Excelente trabajo! 🚀"
+             } else {
+                 finalMessage += " ¡Sigue practicando! 💪"
+             }
+             resultsText.innerText = finalMessage;
+        }
+
+
+        nextButton.addEventListener('click', () => {
+            if(currentQuestionIndex < shuffledQuestions.length){
+                handleNextButton();
+            }
+        });
+        
+        playAgainBtn.addEventListener('click', startQuiz);
+
+        startQuiz();
+    </script>
+</body>
+</html>
