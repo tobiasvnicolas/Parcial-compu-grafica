@@ -8,10 +8,10 @@ from cube import Cube
 from quad import Quad
 
 
-WIDTH, HEIGHT = 800, 600
+WIDTH, HEIGHT = 80, 60
 
 
-SCENE_TYPE = "gpu"  # Opciones: "normal", "cpu", "gpu"
+SCENE_TYPE = "cpu"  # Opciones: "normal", "cpu", "gpu"
 
 
 scene_configs = {
@@ -57,7 +57,7 @@ material_sprite = Material(shader_sprite, textures_data=[sprite_texture])
 
 cube1 = Cube((2, 0, 5), (0, 0, 0), (1, 1, 1), name="Cube1")
 cube2 = Cube((-2, 0, 5), (0, 0, 0), (1, 1, 1), name="Cube2")
-quad = Quad((0, -3, 0), (-90, 0, 0), (10, 15, 1), name="Floor", animated=False)
+quad = Quad((0, -3, 0), (-90, 0, 0), (10, 15, 1), name="Floor", animated=False, hittable=False)
 sprite = Quad((0, 0, 0), (0, 0, 0), (10, 15, 1), name="Sprite", animated=False, hittable=False)
 
 
